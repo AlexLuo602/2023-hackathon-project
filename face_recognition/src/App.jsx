@@ -4,8 +4,18 @@ import './App.css';
 
 
 function App() {
+  const video = document.getElementById('video');
   const imgRef = useRef()
   const canvasRef = useRef()
+
+  function startVideo() {
+    global.navaigator.getUserMedia(
+      { video: {} },
+      stream => video.srcObject = stream,
+      err => console.error(err)
+    )
+  }
+  startVideo()
 
   const handleImage = async () => {
     const detections = await faceapi
@@ -45,7 +55,7 @@ function App() {
 
   return (
     <div className="App">
-      <img 
+      {/* <img 
         crossOrigin="anonymous"
         ref={imgRef}
         src="https://images.pexels.com/photos/1537635/pexels-photo-1537635.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" 
@@ -53,7 +63,9 @@ function App() {
         width="940"
         height="650"
       />
-      <canvas ref={canvasRef} width="940" height="650" />
+      <canvas ref={canvasRef} width="940" height="650" /> */}
+      <video id="video" width="720" height="560" autoplay muted></video>
+      <p>hi there</p>
     </div>
   );
 }
