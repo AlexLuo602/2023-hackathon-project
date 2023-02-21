@@ -4,26 +4,16 @@ import './App.css';
 
 
 function App() {
-  const video = document.getElementById('video');
-  const imgRef = useRef()
-  const canvasRef = useRef()
-
-  function startVideo() {
-    global.navaigator.getUserMedia(
-      { video: {} },
-      stream => video.srcObject = stream,
-      err => console.error(err)
-    )
-  }
-  startVideo()
+  const canvasRef = useRef(null);
+  const videoRef = useRef(null);
 
   const handleImage = async () => {
     const detections = await faceapi
-    .detectAllFaces(imgRef.current, new faceapi.TinyFaceDetectorOptions())
+    .detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions())
     .withFaceLandmarks()
     .withFaceExpressions();
 
-    canvasRef.current.innerHtml = faceapi.createCanvasFromMedia(imgRef.current);
+    canvasRef.current.innerHtml = faceapi.createCanvasFromMedia(videoRef.current);
     faceapi.matchDimensions(canvasRef.current, {
       width: 940,
       height: 650,
@@ -36,9 +26,27 @@ function App() {
     faceapi.draw.drawDetections(canvasRef.current, resized);
     faceapi.draw.drawFaceExpressions(canvasRef.current, resized);
     faceapi.draw.drawFaceLandmarks(canvasRef.current, resized);
-  }; 
+  };
+  
+  useEffect(() => {
+    const startVideo = async() => {
+      let stream = null;
+    
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: { width: 940, height: 650 }
+        });
+        console.log(stream);
+        videoRef.current.srcObject=stream;
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    startVideo(); 
+  },[])
 
-  useEffect(()=> {
+  useEffect(() => {
     const loadModels = () => {
       Promise.all([
         faceapi.nets.tinyFaceDetector.loadFromUri("/models"),
@@ -46,26 +54,18 @@ function App() {
         faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
         faceapi.nets.faceExpressionNet.loadFromUri("/models")
       ])
-        .then(handleImage)
+        .then(setInterval(handleImage))
         .catch((e) => console.log(e));
     }
-
-    imgRef.current && loadModels();
+    loadModels();
   },[])
+
+
 
   return (
     <div className="App">
-      {/* <img 
-        crossOrigin="anonymous"
-        ref={imgRef}
-        src="https://images.pexels.com/photos/1537635/pexels-photo-1537635.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" 
-        alt="" 
-        width="940"
-        height="650"
-      />
-      <canvas ref={canvasRef} width="940" height="650" /> */}
-      <video id="video" width="720" height="560" autoplay muted></video>
-      <p>hi there</p>
+      <video ref={videoRef} id="video" width="940" height="650" autoPlay muted></video>
+      <canvas ref={canvasRef} width="940" height="650" />
     </div>
   );
 }
